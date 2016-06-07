@@ -1,4 +1,4 @@
-DOCKER PROTOTYPE PROJECT WRAPPER
+# DOCKER PROTOTYPE PROJECT WRAPPER
 
 use this around your composer project:
 
