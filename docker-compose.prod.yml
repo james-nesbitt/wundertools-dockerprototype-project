@@ -1,0 +1,81 @@
+# WunderTools docker-compose
+#
+# REQUIRED VARIABLES:
+#
+# IMAGE_ROOT : image name root, which has the "-{node}" appended
+# IMAGE_VERSION : image tag to be used (master or latest))
+# DB_VERSION : image tag for DB, which will change more often
+#
+version: "2"
+
+services:
+
+  ####
+  # Source
+  #
+  source:
+    image: ${BUILD_IMAGE_ROOT}-source:${IMAGE_VERSION}
+    command:
+      - /bin/true
+    volumes:
+      - "/app/web"
+      - "/app/vendor"
+      - "/app/config"
+
+  ####
+  # Assets
+  #
+  assets:
+    image: ${BUILD_IMAGE_ROOT}-assets:${IMAGE_VERSION}
+    command:
+      - /bin/true
+    volumes:
+      - "/app/web/sites/default/files"
+      - "/app/private"
+      - "/app/backups"
+
+  ####
+  # DB node
+  #
+  db:
+    image: ${BUILD_IMAGE_ROOT}-db:${DB_VERSION}
+
+  ####
+  # MemCacheD
+  #
+  memcache:
+    image: quay.io/wunder/alpine-memcached
+
+  ####
+  # FPM node
+  #
+
+  fpm:
+    image: quay.io/wunder/wundertools-image-fuzzy-php
+    volumes_from:
+      - source:ro
+      - assets
+    links:
+      - db:db.app
+      - memcache:memcached.app
+
+  ####
+  # WWW node
+  #
+  www:
+    image: quay.io/wunder/wundertools-image-fuzzy-nginx
+    volumes_from:
+      - source:ro
+      - assets:ro
+    links:
+      - fpm:fpm.app
+
+  ####
+  # Static cache service
+  #
+  varnish:
+    image: quay.io/wunder/alpine-varnish
+    environment:
+      VARNISH_BACKEND_HOST: backend.app
+    links:
+      - www:backend.app

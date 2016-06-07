@@ -1,0 +1,12 @@
+
+# Ignore editor files
+.idea
+
+# keep assets layout but not the contents
+assets/backups
+assets/files/*
+assets/private/*
+
+# ignore some settings caches
+source/settings/drush/cache
+source/settings/console/cache
