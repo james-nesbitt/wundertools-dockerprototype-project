@@ -1,5 +1,15 @@
 # WunderTools docker-compose
 #
+# REQUIRED VARIABLES:
+#
+# IMAGE_ROOT : image name root, which has the "-{node}" appended
+# IMAGE_VERSION : image tag to be used (master or latest))
+# DB_VERSION : image tag for DB, which will change more often
+#
+# PATH_SOURCE : path on host to folder that contains web & vendor
+# PATH_ASSERTS: path on host to folder that contains files, private and backups
+# PATH_SETTINGS : path on host to folder that contains drush, console
+#
 version: "2"
 
 services:
@@ -8,32 +18,31 @@ services:
   # Source
   #
   source:
-    image: quay.io/wunder/client-fi-wkfi-source:master
+    image: ${BUILD_IMAGE_ROOT}-source:${IMAGE_VERSION}
     command:
       - /bin/true
     volumes:
-      - "./project/builds/master:/app/web"
-      - "./project/settings/drupal:/app/web/sites/default"      
-      - "./project/source:/app/web/profiles/wkse"
-      - "./project/source/config:/app/config"
+      - "${PATH_SOURCE}/web:/app/web"
+      - "${PATH_SOURCE}/vendor:/app/vendor"
+      - "${PATH_SOURCE}/config:/app/config"
 
   ####
   # Assets
   #
   assets:
-    image: quay.io/wunder/client-fi-wkfi-assets:master
+    image: ${BUILD_IMAGE_ROOT}-assets:${IMAGE_VERSION}
     command:
       - /bin/true
     volumes:
-      - "./project/assets/files:/app/web/sites/default/files"
-      - "./project/assets/private:/app/private"
-      - "./project/assets/backups:/app/backups"
+      - "${PATH_ASSETS}/files:/app/web/sites/default/files"
+      - "${PATH_ASSETS}/private:/app/private"
+      - "${PATH_ASSETS}/backups:/app/backups"
 
   ####
   # DB node
   #
   db:
-    image: quay.io/wunder/client-fi-wkfi-db:0.2
+    image: ${BUILD_IMAGE_ROOT}-db:${DB_VERSION}
 
   ####
   # MemCacheD

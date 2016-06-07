@@ -1,5 +1,11 @@
 # WunderTools docker-compose
 #
+# REQUIRED VARIABLES:
+#
+# IMAGE_ROOT : image name root, which has the "-{node}" appended
+# IMAGE_VERSION : image tag to be used (master or latest))
+# DB_VERSION : image tag for DB, which will change more often
+#
 version: "2"
 
 services:
@@ -8,18 +14,19 @@ services:
   # Source
   #
   source:
-    image: quay.io/wunder/client-fi-wkfi-source:master
+    image: ${BUILD_IMAGE_ROOT}-source:${IMAGE_VERSION}
     command:
       - /bin/true
     volumes:
       - "/app/web"
+      - "/app/vendor"
       - "/app/config"
 
   ####
   # Assets
   #
   assets:
-    image: quay.io/wunder/client-fi-wkfi-assets:master
+    image: ${BUILD_IMAGE_ROOT}-assets:${IMAGE_VERSION}
     command:
       - /bin/true
     volumes:
@@ -31,7 +38,7 @@ services:
   # DB node
   #
   db:
-    image: quay.io/wunder/client-fi-wkfi-db:0.2
+    image: ${BUILD_IMAGE_ROOT}-db:${DB_VERSION}
 
   ####
   # MemCacheD

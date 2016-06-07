@@ -8,5 +8,5 @@ assets/files/*
 assets/private/*
 
 # ignore some settings caches
-settings/drush/cache
-settings/console/cache
+source/settings/drush/cache
+source/settings/console/cache
