@@ -27,22 +27,12 @@ services:
       - "${PATH_SOURCE}/config:/app/config"
 
   ####
-  # Assets
-  #
-  assets:
-    image: ${BUILD_IMAGE_ROOT}-assets:${IMAGE_VERSION}
-    command:
-      - /bin/true
-    volumes:
-      - "${PATH_ASSETS}/files:/app/web/sites/default/files"
-      - "${PATH_ASSETS}/private:/app/private"
-      - "${PATH_ASSETS}/backups:/app/backups"
-
-  ####
   # DB node
   #
   db:
     image: ${BUILD_IMAGE_ROOT}-db:${DB_VERSION}
+    volumes:
+      - "db-data:/var/lib/mysql"
 
   ####
   # MemCacheD
@@ -58,7 +48,10 @@ services:
     image: quay.io/wunder/wundertools-image-fuzzy-php
     volumes_from:
       - source:ro
-      - assets
+    volumes:
+      - "${PATH_ASSETS}/files:/app/web/sites/default/files"
+      - "${PATH_ASSETS}/private:/app/private"
+      - "${PATH_ASSETS}/archive:/app/backups"
     links:
       - db:db.app
       - memcache:memcached.app
@@ -70,7 +63,9 @@ services:
     image: quay.io/wunder/wundertools-image-fuzzy-nginx
     volumes_from:
       - source:ro
-      - assets:ro
+    volumes:
+      - "${PATH_ASSETS}/files:/app/web/sites/default/files"
+      - "${PATH_ASSETS}/private:/app/private"
     links:
       - fpm:fpm.app
 
@@ -83,3 +78,9 @@ services:
       VARNISH_BACKEND_HOST: backend.app
     links:
       - www:backend.app
+
+####
+# Define a volume to store database data.
+#
+volumes:
+  db-data:

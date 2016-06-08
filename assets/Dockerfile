@@ -7,7 +7,8 @@ FROM quay.io/wunder/wunder-alpine-base
 USER app
 
 RUN mkdir -p /app/web/sites/default && \
-    mkdir -p /app/backups
+    mkdir -p /app/backups && \
+    mkdir -p /app/private
 
 ADD ./files /app/web/sites/default/files
-ADD ./backups /app/backups
+ADD ./private /app/private

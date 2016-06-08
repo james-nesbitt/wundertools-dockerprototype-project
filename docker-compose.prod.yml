@@ -1,11 +1,5 @@
 # WunderTools docker-compose
 #
-# REQUIRED VARIABLES:
-#
-# IMAGE_ROOT : image name root, which has the "-{node}" appended
-# IMAGE_VERSION : image tag to be used (master or latest))
-# DB_VERSION : image tag for DB, which will change more often
-#
 version: "2"
 
 services:
@@ -14,7 +8,7 @@ services:
   # Source
   #
   source:
-    image: ${BUILD_IMAGE_ROOT}-source:${IMAGE_VERSION}
+    image: quay.io/wunder/client-fi-wkfi-source:master
     command:
       - /bin/true
     volumes:
@@ -23,22 +17,10 @@ services:
       - "/app/config"
 
   ####
-  # Assets
-  #
-  assets:
-    image: ${BUILD_IMAGE_ROOT}-assets:${IMAGE_VERSION}
-    command:
-      - /bin/true
-    volumes:
-      - "/app/web/sites/default/files"
-      - "/app/private"
-      - "/app/backups"
-
-  ####
   # DB node
   #
   db:
-    image: ${BUILD_IMAGE_ROOT}-db:${DB_VERSION}
+    image: quay.io/wunder/client-fi-wkfi-db:0.2
 
   ####
   # MemCacheD
@@ -54,7 +36,10 @@ services:
     image: quay.io/wunder/wundertools-image-fuzzy-php
     volumes_from:
       - source:ro
-      - assets
+    volumes:
+      - "assets/files:/app/web/sites/default/files"
+      - "assets/private:/app/private"
+      - "backup/archive:/app/backups"
     links:
       - db:db.app
       - memcache:memcached.app
@@ -66,7 +51,9 @@ services:
     image: quay.io/wunder/wundertools-image-fuzzy-nginx
     volumes_from:
       - source:ro
-      - assets:ro
+    volumes:
+      - "assets/files:/app/web/sites/default/files"
+      - "assets/private:/app/private"
     links:
       - fpm:fpm.app
 
@@ -79,3 +66,8 @@ services:
       VARNISH_BACKEND_HOST: backend.app
     links:
       - www:backend.app
+
+volumes:
+  db-data:
+  assets:
+  backups:
