@@ -2,12 +2,10 @@
 
 . ../wundertools/bootstrap.inc bootstrap
 
-PATH_ASSETS="$(cd "${PATH_APP}" && cd "${SUBPATH_APP_ASSETS}" && pwd)"
-
 echo "-== STARTING PROJECT UPDATE ==-"
 
-echo "--> using composer to build the application"
-cd ${PROJECT_SOURCE} && wundertools composer --pwd update
+echo "--> using composer to build the application [${PATH_SOURCE}]"
+#cd "${PATH_SOURCE}" && wundertools composer update
 
 echo "--> Building source image"
 docker build --tag="${BUILD_IMAGE_ROOT}-source:${IMAGE_VERSION}" "${PATH_SOURCE}"

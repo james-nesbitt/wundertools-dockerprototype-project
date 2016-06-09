@@ -3,9 +3,10 @@
 .idea
 
 # keep assets layout but not the contents
-assets/backups
+assets/backup
 assets/files/*
 assets/private/*
+assets/dbdata/*
 
 # ignore some settings caches
 source/settings/drush/cache

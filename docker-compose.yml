@@ -1,38 +1,93 @@
 # WunderTools docker-compose
 #
-# REQUIRED VARIABLES:
-#
-# IMAGE_ROOT : image name root, which has the "-{node}" appended
-# IMAGE_VERSION : image tag to be used (master or latest))
-# DB_VERSION : image tag for DB, which will change more often
-#
-# PATH_SOURCE : path on host to folder that contains web & vendor
-# PATH_ASSERTS: path on host to folder that contains files, private and backups
-# PATH_SETTINGS : path on host to folder that contains drush, console
-#
 version: "2"
 
 services:
 
   ####
+  # Project related images
+  #
+  # Typically volume containers that are used to provide source and asset to
+  # servers for the application.  The project related images are the focus of the
+  # management tools approach to updating, archiving and distributing an application
+  # and to provide the specifics of an application as a service.
+  #
+  # In production, any required asset or file for an application is provided
+  # strictly as an images based resource, so that production services can be used
+  # with only access to the contents of the compose.yml.
+  # Assets and source should be built into application specific images, as described
+  # below.  Assets can be quite bare, and built up on the server, or can be considered
+  # a distributable resource, and built into the asset image)
+  #
+
+  ####
   # Source
   #
+  # Source image holds any elements that are considered immutable in the system
+  # Runtime volumes are added so that parts of this image can be mounted as
+  # read only in other containers.
+  # Production management relies on the source container to be immutable, and
+  # that the source image versions are maintained in such a way that it is clear
+  # which version should be used in production. The production tools perform no
+  # archiving or management of the contents of the source image/container.
+  #
+  # e.g.:
+  #  - php source code
+  #  - js source code
+  #  - css styling
+  #  - php settings and configuration
+  #  - yml configuration
+  #
   source:
-    image: ${BUILD_IMAGE_ROOT}-source:${IMAGE_VERSION}
+    image: quay.io/wunder/client-fi-wkfi-source:master
     command:
       - /bin/true
     volumes:
-      - "${PATH_SOURCE}/web:/app/web"
-      - "${PATH_SOURCE}/vendor:/app/vendor"
-      - "${PATH_SOURCE}/config:/app/config"
+      - "./source/web:/app/web"
+      - "./source/vendor:/app/vendor"
+      - "./source/config:/app/config"
+
+  ####
+  # Assets
+  #
+  # In contrast to source, assets holds any mutable files and data that other
+  # container may need access to.
+  # Assets is a distributable image, with volumes that need to be managed in any
+  # environment (backups, revisioned, distributed.) Asset volumes are typically
+  # used with named-volumes in production environments, so they do not need to
+  # have anything kept in image, but it can be advantageous to keep things in the
+  # image.
+  #
+  # @NOTE database data is kept in the assets image, in a named volume
+  #
+  assets:
+    image: quay.io/wunder/client-fi-wkfi-assets:master
+    command:
+      - /bin/true
+    volumes:
+      - "assets_files:/app/web/sites/default/files"
+      - "assets_private:/app/private"
+      - "assets_backup:/app/backup"
+
+  ####
+  # Servers
+  #
+  # The following nodes are services that support the application.  Typically
+  # the AMP stack is represented, along with any key-value, search and static-caching
+  # servers used.
+  #
+  # It is optimal if the services use generic shared images, that are used across
+  # instances, and across applications.  This makes the overally server impact low
+  # and means that management tools can focus on the source and asset images
+  #
 
   ####
   # DB node
   #
   db:
-    image: ${BUILD_IMAGE_ROOT}-db:${DB_VERSION}
+    image: quay.io/wunder/wundertools-image-fuzzy-mariadb
     volumes:
-      - "db-data:/var/lib/mysql"
+      - "assets_dbdata:/var/lib/mysql"
 
   ####
   # MemCacheD
@@ -48,10 +103,7 @@ services:
     image: quay.io/wunder/wundertools-image-fuzzy-php
     volumes_from:
       - source:ro
-    volumes:
-      - "${PATH_ASSETS}/files:/app/web/sites/default/files"
-      - "${PATH_ASSETS}/private:/app/private"
-      - "${PATH_ASSETS}/archive:/app/backups"
+      - assets
     links:
       - db:db.app
       - memcache:memcached.app
@@ -63,9 +115,7 @@ services:
     image: quay.io/wunder/wundertools-image-fuzzy-nginx
     volumes_from:
       - source:ro
-    volumes:
-      - "${PATH_ASSETS}/files:/app/web/sites/default/files"
-      - "${PATH_ASSETS}/private:/app/private"
+      - assets
     links:
       - fpm:fpm.app
 
@@ -79,8 +129,8 @@ services:
     links:
       - www:backend.app
 
-####
-# Define a volume to store database data.
-#
 volumes:
-  db-data:
+  assets_files:
+  assets_private:
+  assets_backup:
+  assets_dbdata:

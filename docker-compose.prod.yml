@@ -17,10 +17,25 @@ services:
       - "/app/config"
 
   ####
+  # Assets
+  #
+  assets:
+    image: quay.io/wunder/client-fi-wkfi-assets:master
+    command:
+      - /bin/true
+    volumes:
+      - "assets_files:/app/web/sites/default/files"
+      - "assets_private:/app/private"
+      - "assets_backup:/app/backup"
+      - "assets_dbdata:/var/lib/mysql"
+
+  ####
   # DB node
   #
   db:
-    image: quay.io/wunder/client-fi-wkfi-db:0.2
+    image: quay.io/wunder/wundertools-image-fuzzy-mariadb
+    volumes-from:
+      - assets
 
   ####
   # MemCacheD
@@ -36,10 +51,7 @@ services:
     image: quay.io/wunder/wundertools-image-fuzzy-php
     volumes_from:
       - source:ro
-    volumes:
-      - "assets/files:/app/web/sites/default/files"
-      - "assets/private:/app/private"
-      - "backup/archive:/app/backups"
+      - assets
     links:
       - db:db.app
       - memcache:memcached.app
@@ -51,9 +63,7 @@ services:
     image: quay.io/wunder/wundertools-image-fuzzy-nginx
     volumes_from:
       - source:ro
-    volumes:
-      - "assets/files:/app/web/sites/default/files"
-      - "assets/private:/app/private"
+      - assets
     links:
       - fpm:fpm.app
 
@@ -68,6 +78,7 @@ services:
       - www:backend.app
 
 volumes:
-  db-data:
-  assets:
-  backups:
+  assets_files:
+  assets_private:
+  assets_backup:
+  assets_dbdata:
