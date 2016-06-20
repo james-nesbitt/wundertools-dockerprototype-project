@@ -58,8 +58,6 @@ services:
   # have anything kept in image, but it can be advantageous to keep things in the
   # image.
   #
-  # @NOTE database data is kept in the assets image, in a named volume
-  #
   assets:
     image: quay.io/wunder/client-fi-wkfi-assets:master
     command:
@@ -67,7 +65,7 @@ services:
     volumes:
       - "assets_files:/app/web/sites/default/files"
       - "assets_private:/app/private"
-      - "assets_backup:/app/backup"
+      - "./assets/backup:/app/backup"
 
   ####
   # Servers
@@ -84,10 +82,10 @@ services:
   ####
   # DB node
   #
+  # @NOTE currently data is the only service using a custom application specific image
+  #
   db:
-    image: quay.io/wunder/wundertools-image-fuzzy-mariadb
-    volumes:
-      - "assets_dbdata:/var/lib/mysql"
+    image: quay.io/wunder/client-fi-wkfi-data:master
 
   ####
   # MemCacheD
@@ -132,5 +130,3 @@ services:
 volumes:
   assets_files:
   assets_private:
-  assets_backup:
-  assets_dbdata:

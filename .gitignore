@@ -8,6 +8,11 @@ assets/files/*
 assets/private/*
 assets/dbdata/*
 
+
+# database elements should stay out of the repo
+data/dbdata
+data/dump/*
+
 # ignore some settings caches
 source/settings/drush/cache
 source/settings/console/cache
